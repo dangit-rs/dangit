@@ -1,0 +1,12 @@
+[package]
+name = "dangit"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.93"
+reqwest = { version = "0.12.9" ,features = ["json"] }
+secrecy = "0.10.3"
+serde = { version = "1.0.215", features = ["derive"] }
+serde_json = "1.0.133"
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
