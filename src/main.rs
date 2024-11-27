@@ -1,12 +1,13 @@
 mod github;
 mod tui;
 
-use std::process::Command;
+use std::{process::Command, time::Duration};
 
 use crossterm::event::{Event, EventStream, KeyCode};
 use futures::StreamExt;
 use github::GitHub;
 use secrecy::SecretString;
+use tachyonfx::Shader;
 use tui::State;
 
 fn get_github_token() -> SecretString {
@@ -33,6 +34,11 @@ async fn main() -> anyhow::Result<()> {
 
     while state.is_running {
         terminal.draw(|f| state.draw(f))?;
+
+        if state.effect.running() {
+            tokio::time::sleep(Duration::from_millis(16)).await;
+            continue;
+        }
 
         if let Some(event) = events.next().await {
             let event = event?;

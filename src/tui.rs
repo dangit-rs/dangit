@@ -7,6 +7,7 @@ use ratatui::{
     widgets::{Block, List, ListItem, ListState, Tabs},
     Frame,
 };
+use tachyonfx::{fx, Duration as FxDuration, Effect, EffectRenderer, Interpolation, Shader};
 
 use crate::github::{GitHub, Issue, Notification};
 
@@ -14,6 +15,7 @@ pub struct State {
     pub is_running: bool,
     pub list_state: ListState,
     pub selected_tab: usize,
+    pub effect: Effect,
 
     // GitHub data
     pub assigned_issues: Vec<Issue>,
@@ -32,6 +34,7 @@ impl State {
                 list_state.select(Some(0));
                 list_state
             },
+            effect: fx::coalesce((800, Interpolation::SineOut)),
             selected_tab: 0,
             assigned_issues: client.assigned_issues().await?,
             created_issues: client.created_issues().await?,
@@ -59,6 +62,10 @@ impl State {
             1 => self.draw_issues(frame, main_area, self.assigned_issues.clone()),
             2 => self.draw_issues(frame, main_area, self.created_prs.clone()),
             _ => {}
+        }
+
+        if self.effect.running() {
+            frame.render_effect(&mut self.effect, frame.area(), FxDuration::from_millis(100));
         }
     }
     fn get_issues_by_repo<'a>(issues: &'a [&'a Issue]) -> BTreeMap<&'a str, Vec<&'a Issue>> {
