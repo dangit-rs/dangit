@@ -62,6 +62,7 @@ async fn main() -> anyhow::Result<()> {
                     KeyCode::Tab => {
                         state.selected_tab = (state.selected_tab + 1) % 3;
                         state.list_state.select(Some(0));
+                        state.effect.reset();
                     }
                     _ => {}
                 },
