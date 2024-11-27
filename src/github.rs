@@ -25,6 +25,17 @@ impl std::fmt::Display for Issue {
     }
 }
 
+#[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize)]
+struct Repo {
+    name: String,
+    owner: Owner,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize)]
+struct Owner {
+    login: String,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 enum IssueType {
     Issue,
@@ -42,6 +53,7 @@ impl std::fmt::Display for IssueType {
 
 #[derive(Debug, serde::Deserialize)]
 pub struct Notification {
+    repository: Repo,
     // pub reason: String,
     pub subject: Subject,
     // pub unread: bool,
