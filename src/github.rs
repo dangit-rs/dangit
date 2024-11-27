@@ -129,7 +129,8 @@ impl GitHub {
     pub async fn get_issues(&self, filter: &str) -> anyhow::Result<Vec<Issue>> {
         let search_query = match &self.organization {
             Some(org) => format!("org:{org} state:open is:issue {filter}:@me"),
-            None => "state:open is:issue {filter}:@me".to_string(),
+            None => format!("state:open is:issue {filter}:@me"),
+            
         };
         // Convert filter string to proper query
         let query = format!(
@@ -203,7 +204,7 @@ query Issues{{
     async fn get_prs(&self, filter: &str) -> anyhow::Result<Vec<Issue>> {
         let search_query = match &self.organization {
             Some(org) => format!("org:{org} state:open is:pr {filter}:@me"),
-            None => "state:open is:pr {filter}:@me".to_string(),
+            None => format!("state:open is:pr {filter}:@me"),
         };
         let query = format!(
             r#"

@@ -21,25 +21,10 @@ fn get_github_token() -> SecretString {
     github_token
 }
 
-fn print_issues_by_repo(issues: &[&github::Issue]) {
-    let mut issues_by_repo = std::collections::BTreeMap::new();
-    for issue in issues {
-        let repo = &issue.repository;
-        let entry = issues_by_repo.entry(repo).or_insert_with(Vec::new);
-        entry.push(issue);
-    }
-    for (repo, issues) in issues_by_repo {
-        println!("{}:", repo);
-        for issue in issues {
-            println!("  {}", issue);
-        }
-    }
-}
-
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let github_token = get_github_token();
-    let client = GitHub::new(&github_token, Some(String::from("ratatui")))?;
+    let client = GitHub::new(&github_token, None)?;
 
     let mut state = State::new(&client).await?;
 
@@ -56,10 +41,10 @@ async fn main() -> anyhow::Result<()> {
                     KeyCode::Char('q') => {
                         state.is_running = false;
                     }
-                    KeyCode::Down => {
+                    KeyCode::Down | KeyCode::Char('j') => {
                         state.list_state.select_next();
                     }
-                    KeyCode::Up => {
+                    KeyCode::Up | KeyCode::Char('k') => {
                         state.list_state.select_previous();
                     }
                     KeyCode::Enter => {
