@@ -9,12 +9,12 @@ use secrecy::{ExposeSecret as _, SecretString};
 //     Closed,
 // }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Issue {
     pub html_url: String,
     //     number: u64,
     //     state: IssueState,
-    title: String,
+    pub title: String,
     pub repository: String,
     issue_type: IssueType,
 }
@@ -25,7 +25,7 @@ impl std::fmt::Display for Issue {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 enum IssueType {
     Issue,
     PullRequest,
@@ -38,10 +38,6 @@ impl std::fmt::Display for IssueType {
             IssueType::PullRequest => write!(f, "PR"),
         }
     }
-}
-
-pub struct GitHub {
-    client: reqwest::Client,
 }
 
 #[derive(Debug, serde::Deserialize)]
@@ -96,10 +92,16 @@ struct Repository {
     name: String,
 }
 
+pub struct GitHub {
+    client: reqwest::Client,
+    organization: Option<String>,
+}
+
 impl GitHub {
-    pub fn new(token: &SecretString) -> anyhow::Result<Self> {
+    pub fn new(token: &SecretString, organization: Option<String>) -> anyhow::Result<Self> {
         let client = Self {
             client: client(token)?,
+            organization,
         };
         Ok(client)
     }
@@ -113,11 +115,15 @@ impl GitHub {
     }
 
     pub async fn get_issues(&self, filter: &str) -> anyhow::Result<Vec<Issue>> {
+        let search_query = match &self.organization {
+            Some(org) => format!("org:{org} state:open is:issue {filter}:@me"),
+            None => "state:open is:issue {filter}:@me".to_string(),
+        };
         // Convert filter string to proper query
         let query = format!(
             r#"
 query Issues{{
-  search(first: 100, type: ISSUE, query: "org:rust-lang state:open is:issue {filter}:@me") {{
+  search(first: 100, type: ISSUE, query: "{search_query}") {{
     issueCount
     pageInfo {{
       hasNextPage
@@ -183,10 +189,14 @@ query Issues{{
     }
 
     async fn get_prs(&self, filter: &str) -> anyhow::Result<Vec<Issue>> {
+        let search_query = match &self.organization {
+            Some(org) => format!("org:{org} state:open is:pr {filter}:@me"),
+            None => "state:open is:pr {filter}:@me".to_string(),
+        };
         let query = format!(
             r#"
 query PullRequests {{
-  search(first: 100, type: ISSUE, query: "org:rust-lang state:open is:pr {filter}:@me") {{
+  search(first: 100, type: ISSUE, query: "{search_query}") {{
     issueCount
     edges {{
       node {{
